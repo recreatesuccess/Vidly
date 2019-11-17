@@ -5,42 +5,37 @@ const app = express();
 app.use(express.json());
 
 const genres = [
-    {id: 1, genre: "Blues"},
-    {id: 2, genre: "Rap"},
-    {id: 3, genre: "Rock"}
-]
-
-app.get('/', (req, res) => {
-    res.send(`You're in GENRE land now :')`);
-});
+  { id: 1, name: 'Action' },  
+  { id: 2, name: 'Horror' },  
+  { id: 3, name: 'Romance' },  
+];
 
 app.get('/api/genres', (req, res) => {
-    res.send(genres);
+  res.send(genres);
 });
 
-app.get('/api/genres', (req, res) => {
-    const { error } = validateGenre(req.body);
+app.post('/api/genres', (req, res) => {
+  const { error } = validateGenre(req.body); 
+  if (error) return res.status(400).send(error.details[0].message);
 
-    if (error) return res.status(400).send(error.details[0].message);
-
-    const genre = {
-        id: genres.length + 1,
-        name: req.body.name
-    };
-    genres.push(genre);
-    res.send(genre);
+  const genre = {
+    id: genres.length + 1,
+    name: req.body.name
+  };
+  genres.push(genre);
+  res.send(genre);
 });
 
 app.put('/api/genres/:id', (req, res) => {
-    const genre = genres.find(c => c.id === parseInt(req.params.id));
-    if (!genre) return res.status(404).send('The genre with the given ID was not found.');
+  const genre = genres.find(c => c.id === parseInt(req.params.id));
+  if (!genre) return res.status(404).send('The genre with the given ID was not found.');
+
+  const { error } = validateGenre(req.body); 
+  if (error) return res.status(400).send(error.details[0].message);
   
-    const { error } = validateGenre(req.body); 
-    if (error) return res.status(400).send(error.details[0].message);
-    
-    genre.name = req.body.name; 
-    res.send(genre);
-  });
+  genre.name = req.body.name; 
+  res.send(genre);
+});
 
 app.delete('/api/genres/:id', (req, res) => {
   const genre = genres.find(c => c.id === parseInt(req.params.id));
@@ -58,17 +53,13 @@ app.get('/api/genres/:id', (req, res) => {
   res.send(genre);
 });
 
+function validateGenre(genre) {
+  const schema = {
+    name: Joi.string().min(3).required()
+  };
 
-function validateGenre(genre){
-    // validate
-    // if invalid, return 400 - Bad request
-    const schema = {
-        name: Joi.string().min(3).required()
-    };
-
-    return Joi.validate(genre, schema);
+  return Joi.validate(genre, schema);
 }
 
 const port = process.env.PORT || 3000;
-
-app.listen(port, () => console.log(`Listening on port ${port}`));
+app.listen(port, () => console.log(`Listening on port ${port}...`));
